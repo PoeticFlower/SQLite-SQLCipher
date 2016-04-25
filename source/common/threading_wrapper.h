@@ -36,3 +36,21 @@ protected:
   uint32_t        m_counter;
 #endif // _WIN32
 };
+
+class ScopedLock
+{
+public:
+  ScopedLock(Lock &instance)
+    : m_instance(instance)
+  {
+    this->m_instance.Acquire();
+  }
+  ~ScopedLock()
+  {
+    this->m_instance.Release();
+  }
+protected:
+  // do not allow assignments
+  ScopedLock &operator =(const ScopedLock &);
+  Lock       &m_instance;
+};
