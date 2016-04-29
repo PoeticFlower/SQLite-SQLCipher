@@ -54,3 +54,17 @@ protected:
   ScopedLock &operator =(const ScopedLock &);
   Lock       &m_instance;
 };
+
+class ThreadingWrapper
+{
+public:
+  ThreadingWrapper();
+  virtual ~ThreadingWrapper();
+  // Returns true if thread was successfully created.
+  bool Start();
+  void Stop();
+  // Derived class must implement ThreadMain.
+  virtual void ThreadMain() = 0;
+private:
+  ThreadHandle m_thread;
+};

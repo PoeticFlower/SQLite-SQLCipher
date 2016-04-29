@@ -122,3 +122,70 @@ void Event::Trigger()
   pthread_mutex_unlock(&m_mutex);
 #endif // _WIN32
 }
+
+static void StackAlignMain(ThreadingWrapper *instance)
+{
+  instance->ThreadMain();
+}
+
+#ifdef _WIN32
+static DWORD WINAPI ThreadShim(ThreadingWrapper *instance)
+{
+  STACK_ALIGN(StackAlignMain, instance);
+  return 0;
+}
+#else  //  POSIX
+static void* ThreadShim(void *opaque)
+{
+  ThreadingWrapper *instance = reinterpret_cast<ThreadingWrapper *>(opaque);
+  STACK_ALIGN(StackAlignMain, instance);
+  return NULL;
+}
+#endif // _WIN32
+
+ThreadingWrapper::ThreadingWrapper()
+{
+  m_thread = 0;
+}
+
+ThreadingWrapper::~ThreadingWrapper()
+{
+#ifdef _WIN32
+  if (m_thread)
+    CloseHandle(m_thread);
+#else  //  POSIX
+#endif // _WIN32
+}
+
+bool ThreadingWrapper::Start()
+{
+#ifdef _WIN32
+  DWORD threadId;
+  m_thread = CreateThread(
+    NULL,
+    0,
+    (LPTHREAD_START_ROUTINE)ThreadShim,
+    this,
+    0,
+    &threadId);
+  return threadId > 0;
+#else  //  POSIX
+  if (pthread_create(&m_thread, NULL, ThreadShim, this))
+  {
+    m_thread = 0;
+    return false;
+  }
+  return true;
+#endif // _WIN32
+}
+
+void ThreadingWrapper::Stop()
+{
+#ifdef _WIN32
+  if (m_thread)
+    WaitForSingleObject(m_thread, INFINITE);
+#else  //  POSIX
+  if (m_thread)
+    pthread_join(m_thread, NULL);
+#endif // _WIN32
+}
