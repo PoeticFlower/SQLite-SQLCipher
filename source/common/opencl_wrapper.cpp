@@ -33,3 +33,23 @@ public:
 };
 
 unsigned int OpenCLWrapper::m_opencl_func_loading_status = OCL_FUNC_LOAD_INIT;
+
+#define OPENCL_LOG_ERROR(...)                                               \
+  fprintf(stderr, __VA_ARGS__)
+
+#define OPENCL_SAFE_CALL0(oclfunc, action)                                  \
+  do                                                                        \
+  {                                                                         \
+    oclfunc;                                                                \
+    if (CL_SUCCESS != ocl_err_code)                                         \
+    {                                                                       \
+      OPENCL_LOG_ERROR(                                                     \
+        "Failed to call OpenCL API %s: (CODE-%d)%s, Line %u.\n",            \
+        #oclfunc,                                                           \
+        ocl_err_code,                                                       \
+        OpenCLGetErrorString(ocl_err_code),                                 \
+        __LINE__                                                            \
+        );                                                                  \
+      action;                                                               \
+    }                                                                       \
+  } while (0)
