@@ -88,6 +88,43 @@ static void* AppleGetProcAddress(const char* name)
   }
 #endif // __APPLE__
 
+#if defined(_WIN32)
+static void* WinGetProcAddress(const char* name)
+{
+  static bool    initialized = false;
+  static HMODULE handle      = NULL;
+  if (!handle && !initialized)
+  {
+    Lock       lock;
+    ScopedLock scoped_lock(lock);
+    if (!initialized)
+    {
+      handle = GetModuleHandleA("OpenCL.dll");
+      if (!handle)
+      {
+        const char* path = "OpenCL.dll";
+        handle = LoadLibraryA(path);
+        if (!handle)
+        {
+          OPENCL_LOG_ERROR("Failed to load OpenCL runtime\n");
+        }
+      }
+      initialized = true;
+    }
+  }
+  if (!handle)
+    return NULL;
+  return (void*)GetProcAddress(handle, name);
+}
+
+#define OPENCL_GET_PROC_ADDRESS(name)                                       \
+  if (NULL == (func_##name = (FUNC_##name)WinGetProcAddress(#name)))        \
+  {                                                                         \
+    OPENCL_LOG_ERROR("Failed to load OpenCL API: %s\n", #name);             \
+    return false;                                                           \
+  }
+#endif // _WIN32
+
 #ifndef OPENCL_GET_PROC_ADDRESS
 #ifdef __GNUC__
 #warning("OpenCL dynamic library loader: check configuration")
