@@ -125,6 +125,44 @@ static void* WinGetProcAddress(const char* name)
   }
 #endif // _WIN32
 
+#if defined(__linux__)
+static void* UnixGetProcAddress(const char* name)
+{
+  static bool    initialized = false;
+  static void   *handle      = NULL;
+  if (!handle && !initialized)
+  {
+    Lock       lock;
+    ScopedLock scoped_lock(lock);
+    if (!initialized)
+    {
+      const char* path = "libOpenCL.so";
+      handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+      if (!handle)
+      {
+        path = "libOpenCL.so.1";
+        handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+        if (!handle)
+        {
+          OPENCL_LOG_ERROR("Failed to load OpenCL runtime\n");
+        }
+      }
+      initialized = true;
+    }
+  }
+  if (!handle)
+    return NULL;
+  return dlsym(handle, name);
+}
+
+#define OPENCL_GET_PROC_ADDRESS(name)                                       \
+  if (NULL == (func_##name = (FUNC_##name)UnixGetProcAddress(#name)))       \
+  {                                                                         \
+    OPENCL_LOG_ERROR("Failed to load OpenCL API: %s\n", #name);             \
+    return false;                                                           \
+  }
+#endif // __linux__
+
 #ifndef OPENCL_GET_PROC_ADDRESS
 #ifdef __GNUC__
 #warning("OpenCL dynamic library loader: check configuration")
