@@ -457,3 +457,48 @@ static const char* OpenCLGetErrorString(cl_int ocl_err_code)
     return "UNKNOWN_ERROR_CODE";
   return strings[-ocl_err_code];
 }
+
+static bool OpenCLInitialize(
+  OpenCLExecuteStruct* opencl_exec_struct
+  )
+{
+  cl_int           ocl_err_code = CL_SUCCESS;
+  cl_uint          num_platforms;
+  cl_uint          num_devices;
+  cl_platform_id   platforms[16];
+  cl_device_id     devices[32];
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetPlatformIDs(16, platforms, &num_platforms)
+    , return false);
+
+  for (cl_uint index = 0; index < num_platforms; ++index)
+  {
+    OPENCL_SAFE_CALL0(
+      ocl_err_code = func_clGetDeviceIDs(
+        platforms[index], CL_DEVICE_TYPE_ALL, 32,
+        devices, &num_devices)
+      , return false);
+
+    for (cl_uint index2 = 0; index2 < num_devices; ++index2)
+    {
+      if (opencl_exec_struct->m_num_devices < OCL_MAX_NUM_DEVICES)
+      {
+        opencl_exec_struct->m_device_list[
+          opencl_exec_struct->m_num_devices++] = devices[index2];
+      }
+    }
+  }
+
+  OPENCL_SAFE_CALL0(
+    opencl_exec_struct->m_context = func_clCreateContext(
+      NULL,
+      opencl_exec_struct->m_num_devices,
+      opencl_exec_struct->m_device_list,
+      NULL,
+      NULL,
+      &ocl_err_code)
+    , return false);
+
+  return true;
+}
