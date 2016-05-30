@@ -502,3 +502,120 @@ static bool OpenCLInitialize(
 
   return true;
 }
+
+static bool OpenCLOutputDeviceInfo(cl_device_id device, FILE* file = stdout)
+{
+  cl_int           ocl_err_code = CL_SUCCESS;
+  char             output_buffer[1024];
+  size_t           param_value_size;
+  cl_device_type   device_type;
+  cl_uint          uint_value;
+  size_t           size_t_value;
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetDeviceInfo(device, CL_DEVICE_TYPE,
+      sizeof(cl_device_type), &device_type,
+      &param_value_size)
+    , return false);
+  switch (device_type)
+  {
+  case CL_DEVICE_TYPE_CPU:
+    sprintf(output_buffer, "CL_DEVICE_TYPE_CPU");
+    break;
+  case CL_DEVICE_TYPE_GPU:
+    sprintf(output_buffer, "CL_DEVICE_TYPE_GPU");
+    break;
+  case CL_DEVICE_TYPE_ACCELERATOR:
+    sprintf(output_buffer, "CL_DEVICE_TYPE_ACCELERATOR");
+    break;
+  default:
+    sprintf(output_buffer, "UNKNOWN TYPE");
+    break;
+  }
+  fprintf(file, "  %-50s%s\n",
+    "Device Type:",
+    output_buffer);
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetDeviceInfo(device, CL_DEVICE_VENDOR_ID,
+    sizeof(cl_uint), &uint_value,
+    &param_value_size)
+    , return false);
+  fprintf(file, "  %-50s%xh\n",
+    "Vendor ID:",
+    uint_value);
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetDeviceInfo(device, CL_DEVICE_MAX_COMPUTE_UNITS,
+    sizeof(cl_uint), &uint_value,
+    &param_value_size)
+    , return false);
+  fprintf(file, "  %-50s%d\n",
+    "Max compute units:",
+    uint_value);
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
+    sizeof(size_t), &size_t_value,
+    &param_value_size)
+    , return false);
+  fprintf(file, "  %-50s%d\n",
+    "Max work group size:",
+    size_t_value);
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetDeviceInfo(device, CL_DEVICE_NAME,
+    sizeof(output_buffer), &output_buffer,
+    &param_value_size)
+    , return false);
+  fprintf(file, "  %-50s%s\n",
+    "Name:",
+    output_buffer);
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetDeviceInfo(device, CL_DEVICE_VENDOR,
+    sizeof(output_buffer), &output_buffer,
+    &param_value_size)
+    , return false);
+  fprintf(file, "  %-50s%s\n",
+    "Vendor:",
+    output_buffer);
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetDeviceInfo(device, CL_DRIVER_VERSION,
+    sizeof(output_buffer), &output_buffer,
+    &param_value_size)
+    , return false);
+  fprintf(file, "  %-50s%s\n",
+    "Driver version:",
+    output_buffer);
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetDeviceInfo(device, CL_DEVICE_PROFILE,
+    sizeof(output_buffer), &output_buffer,
+    &param_value_size)
+    , return false);
+  fprintf(file, "  %-50s%s\n",
+    "Profile:",
+    output_buffer);
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetDeviceInfo(device, CL_DEVICE_VERSION,
+    sizeof(output_buffer), &output_buffer,
+    &param_value_size)
+    , return false);
+  fprintf(file, "  %-50s%s\n",
+    "Version:",
+    output_buffer);
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS,
+    sizeof(output_buffer), &output_buffer,
+    &param_value_size)
+    , return false);
+  fprintf(file, "  %-50s%s\n",
+    "Extensions:",
+    output_buffer);
+
+  return true;
+}
