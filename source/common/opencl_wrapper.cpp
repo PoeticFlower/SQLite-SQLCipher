@@ -619,3 +619,64 @@ static bool OpenCLOutputDeviceInfo(cl_device_id device, FILE* file = stdout)
 
   return true;
 }
+
+static bool OpenCLBuildProgramWithSource(
+  cl_context           context,
+  cl_uint              num_devices,
+  const cl_device_id  *device_list,
+  const char          *options,
+  cl_uint              count,
+  const char         **strings,
+  const size_t        *lengths,
+  cl_program          *program
+  )
+{
+  cl_int           ocl_err_code = CL_SUCCESS;
+
+  OPENCL_SAFE_CALL0(
+    *program = func_clCreateProgramWithSource(
+      context, count, strings, lengths, &ocl_err_code)
+    , return false);
+
+  ocl_err_code = func_clBuildProgram(
+    *program, num_devices, device_list, options,
+    NULL,
+    NULL);
+
+  if (CL_SUCCESS != ocl_err_code)
+  {
+    char   *error_message;
+    size_t  size_message;
+
+    OPENCL_LOG_ERROR(
+      "Failed to build OpenCL program: (%d)%s\n",
+      ocl_err_code,
+      OpenCLGetErrorString(ocl_err_code));
+
+    for (cl_uint index = 0; index < count; ++index)
+    {
+      OPENCL_SAFE_CALL0(
+        ocl_err_code = func_clGetProgramBuildInfo(
+          *program, device_list[index], CL_PROGRAM_BUILD_LOG,
+          0, NULL, &size_message)
+        , return false);
+
+      error_message = (char*)malloc(size_message);
+
+      ocl_err_code = func_clGetProgramBuildInfo(
+        *program, device_list[index], CL_PROGRAM_BUILD_LOG,
+        size_message, error_message, NULL);
+
+      if (CL_SUCCESS == ocl_err_code)
+      {
+        OPENCL_LOG_ERROR(error_message);
+      }
+
+      free(error_message);
+    }
+
+    return false;
+  }
+
+  return true;
+}
