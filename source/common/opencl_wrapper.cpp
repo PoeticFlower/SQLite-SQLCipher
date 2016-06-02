@@ -680,3 +680,43 @@ static bool OpenCLBuildProgramWithSource(
 
   return true;
 }
+
+OpenCLWrapper* OpenCLWrapper::GenerateInstance(
+  OpenCLExecuteStruct* opencl_exec_struct /* = NULL */
+  )
+{
+  if (OCL_FUNC_LOAD_INIT == m_opencl_func_loading_status)
+  {
+    if (OpenCLGetProcAddress())
+      m_opencl_func_loading_status = OCL_FUNC_LOAD_SUCCESS;
+    else
+      m_opencl_func_loading_status = OCL_FUNC_LOAD_FAILED;
+  }
+
+  if (OCL_FUNC_LOAD_SUCCESS != m_opencl_func_loading_status)
+  {
+    return NULL;
+  }
+
+  if (NULL == opencl_exec_struct)
+  {
+    opencl_exec_struct = new OpenCLExecuteStruct();
+    if (!OpenCLInitialize(opencl_exec_struct))
+    {
+      delete opencl_exec_struct;
+      opencl_exec_struct = NULL;
+      return NULL;
+    }
+  }
+
+  return new OpenCLWrapper(opencl_exec_struct);
+}
+
+OpenCLWrapper::OpenCLWrapper(OpenCLExecuteStruct* opencl_exec_struct)
+  : m_opencl_exec_struct(opencl_exec_struct)
+{
+}
+
+OpenCLWrapper::~OpenCLWrapper()
+{
+}
