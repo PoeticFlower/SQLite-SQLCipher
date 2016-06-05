@@ -720,3 +720,14 @@ OpenCLWrapper::OpenCLWrapper(OpenCLExecuteStruct* opencl_exec_struct)
 OpenCLWrapper::~OpenCLWrapper()
 {
 }
+
+void OpenCLWrapper::OutputCLInfo(FILE* file /* = stdout */)
+{
+  unsigned int index = 0;
+  for (; index < m_opencl_exec_struct->m_num_devices; ++index)
+  {
+    OpenCLOutputDeviceInfo(
+      m_opencl_exec_struct->m_device_list[index]);
+    fprintf(stdout, "\n\n");
+  }
+}
