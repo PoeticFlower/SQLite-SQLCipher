@@ -731,3 +731,150 @@ void OpenCLWrapper::OutputCLInfo(FILE* file /* = stdout */)
     fprintf(stdout, "\n\n");
   }
 }
+
+void OpenCLWrapper::SelfTestDemo()
+{
+  static const char *ocl_test_kernel =
+    "__kernel void TestKernel    (__global short *src,         \n"
+    "                             __global short *dst)         \n"
+    "{                                                         \n"
+    "  uint   globalIdx = get_global_id(0);                    \n"
+    "  dst[globalIdx]   = src[globalIdx] + 155;                \n"
+    "}                                                         \n";
+  cl_int            ocl_err_code = CL_SUCCESS;
+  cl_command_queue  command_queue;
+  cl_program        program;
+  cl_kernel         kernel_test;
+  cl_mem            mem_input;
+  cl_mem            mem_output;
+  short            *buf_input;
+  short            *buf_output;
+  const size_t      buf_size = 102400;
+  size_t            kernel_string_length;
+  size_t            global_offset = 0;
+  size_t            global_size   = buf_size / sizeof(short);
+  size_t            local_size    = 64;
+
+  OPENCL_SAFE_CALL0(
+    command_queue = func_clCreateCommandQueue(
+      m_opencl_exec_struct->m_context,
+      m_opencl_exec_struct->m_device_list[0],
+      0,
+      &ocl_err_code)
+    , return);
+  OPENCL_SAFE_CALL0(
+    mem_input = func_clCreateBuffer(
+      m_opencl_exec_struct->m_context,
+      CL_MEM_READ_ONLY,
+      buf_size,
+      NULL,
+      &ocl_err_code)
+    , return);
+  OPENCL_SAFE_CALL0(
+    mem_output = func_clCreateBuffer(
+      m_opencl_exec_struct->m_context,
+      CL_MEM_WRITE_ONLY,
+      buf_size,
+      NULL,
+      &ocl_err_code)
+    , return);
+
+  kernel_string_length = strlen(ocl_test_kernel) + 1;
+  if (!OpenCLBuildProgramWithSource(
+    m_opencl_exec_struct->m_context,
+    m_opencl_exec_struct->m_num_devices,
+    m_opencl_exec_struct->m_device_list,
+    NULL,
+    1,
+    &ocl_test_kernel,
+    &kernel_string_length,
+    &program))
+  {
+    return;
+  }
+
+  OPENCL_SAFE_CALL0(
+    kernel_test = func_clCreateKernel(
+      program,
+      "TestKernel",
+      &ocl_err_code);
+    , return);
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clSetKernelArg(
+      kernel_test,
+      0,
+      sizeof(cl_mem),
+      &mem_input)
+    , return);
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clSetKernelArg(
+      kernel_test,
+      1,
+      sizeof(cl_mem),
+      &mem_output);
+  , return);
+
+  buf_input  = new short[buf_size / sizeof(short)];
+  buf_output = new short[buf_size / sizeof(short)];
+  for (int index = 0; index < buf_size / sizeof(short); ++index)
+  {
+    buf_input[index] = 10000;
+  }
+
+  fprintf(stdout, "Input data:\n");
+  for (int index = 0; index < 256; ++index)
+  {
+    fprintf(stdout, "%d ", buf_input[index]);
+  }
+  fprintf(stdout, "\n");
+
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clEnqueueWriteBuffer(
+      command_queue,
+      mem_input,
+      CL_TRUE,
+      0,
+      buf_size,
+      buf_input,
+      0,
+      NULL,
+      NULL)
+    , return);
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clEnqueueNDRangeKernel(
+      command_queue,
+      kernel_test,
+      1,
+      &global_offset,
+      &global_size,
+      &local_size,
+      0,
+      NULL,
+      NULL)
+    , return);
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clEnqueueReadBuffer(
+      command_queue,
+      mem_output,
+      CL_TRUE,
+      0,
+      1024,
+      buf_output,
+      0,
+      NULL,
+      NULL)
+    , return);
+  OPENCL_SAFE_CALL0(
+    ocl_err_code = func_clFinish(command_queue)
+    , return);
+
+  fprintf(stdout, "Output data:\n");
+  for (int index = 0; index < 256; ++index)
+  {
+    fprintf(stdout, "%d ", buf_output[index]);
+  }
+  fprintf(stdout, "\n");
+
+  delete[] buf_input;
+  delete[] buf_output;
+}
