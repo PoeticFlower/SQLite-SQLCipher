@@ -1,0 +1,9 @@
+file(GLOB CLI_SOURCE_FILES_INTERNAL
+    LIST_DIRECTORIES false
+    cli_main.cpp
+    )
+
+set(CLI_SOURCE_FILES
+    ${CLI_SOURCE_FILES_INTERNAL}
+    PARENT_SCOPE
+    )
