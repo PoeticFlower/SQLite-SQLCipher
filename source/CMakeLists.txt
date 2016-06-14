@@ -3,6 +3,7 @@ project(BaseProject VERSION 0.0.0.0 LANGUAGES C CXX)
 
 add_subdirectory(common)
 add_subdirectory(cli)
+add_subdirectory(gui)
 
 include_directories(
     thirdparty/include)
@@ -22,3 +23,19 @@ add_executable(cli_app
 target_link_libraries(cli_app
     ${PLATFORM_LIBRARIES}
     )
+
+if(MSVC)
+    add_executable(Win32App WIN32
+        ${GUICOMMON_SOURCE_FILES}
+        ${WIN32COMMON_HEADER_FILES}
+        ${WIN32COMMON_SOURCE_FILES}
+        ${WIN32COMMON_RESOURCE_FILES}
+        ${WIN32APP_HEADER_FILES}
+        ${WIN32APP_SOURCE_FILES}
+        ${WIN32APP_RESOURCE_FILES}
+        )
+    target_compile_definitions(Win32App
+        PUBLIC -D_UNICODE
+        PUBLIC -DUNICODE
+        )
+endif(MSVC)
