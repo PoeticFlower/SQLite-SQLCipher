@@ -1,6 +1,26 @@
 cmake_minimum_required(VERSION 3.0)
 project(BaseProject VERSION 0.0.0.0 LANGUAGES C CXX)
 
+set(USE_STATIC_CRT_LIBRARY OFF CACHE BOOL
+    "Use static version of the C run-time library.")
+
+if(MSVC)
+    if(USE_STATIC_CRT_LIBRARY)
+        foreach(CompilerFlags
+            CMAKE_CXX_FLAGS
+            CMAKE_CXX_FLAGS_DEBUG
+            CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_CXX_FLAGS_MINSIZEREL
+            CMAKE_CXX_FLAGS_RELWITHDEBINFO
+        )
+            if(${CompilerFlags} MATCHES "/MD")
+                string(REGEX REPLACE "/MD" "/MT"
+                    ${CompilerFlags} "${${CompilerFlags}}")
+            endif(${CompilerFlags} MATCHES "/MD")
+        endforeach(CompilerFlags)
+    endif(USE_STATIC_CRT_LIBRARY)
+endif(MSVC)
+
 add_subdirectory(common)
 add_subdirectory(cli)
 add_subdirectory(gui)
