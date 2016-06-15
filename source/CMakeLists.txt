@@ -26,6 +26,10 @@ if(MSVC)
     endif(USE_STATIC_CRT_LIBRARY)
 endif(MSVC)
 
+find_package(OpenSSL
+    REQUIRED
+    )
+
 add_subdirectory(thirdparty)
 add_subdirectory(common)
 add_subdirectory(cli)
