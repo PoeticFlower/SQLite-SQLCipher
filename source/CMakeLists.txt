@@ -7,6 +7,11 @@ set(USE_STATIC_CRT_LIBRARY OFF CACHE BOOL
 if(MSVC)
     if(USE_STATIC_CRT_LIBRARY)
         foreach(CompilerFlags
+            CMAKE_C_FLAGS
+            CMAKE_C_FLAGS_DEBUG
+            CMAKE_C_FLAGS_RELEASE
+            CMAKE_C_FLAGS_MINSIZEREL
+            CMAKE_C_FLAGS_RELWITHDEBINFO
             CMAKE_CXX_FLAGS
             CMAKE_CXX_FLAGS_DEBUG
             CMAKE_CXX_FLAGS_RELEASE
