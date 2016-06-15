@@ -26,6 +26,8 @@ if(MSVC)
     endif(USE_STATIC_CRT_LIBRARY)
 endif(MSVC)
 
+set(OPENSSL_USE_STATIC_LIBS TRUE)
+set(OPENSSL_MSVC_STATIC_RT TRUE)
 find_package(OpenSSL
     REQUIRED
     )
