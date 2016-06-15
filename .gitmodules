@@ -1,3 +1,6 @@
 [submodule "source/thirdparty/include/CL"]
 	path = source/thirdparty/include/CL
 	url = https://github.com/KhronosGroup/OpenCL-Headers.git
+[submodule "source/thirdparty/sqlite"]
+	path = source/thirdparty/sqlite
+	url = https://github.com/PoeticFlower/SQLite.git
